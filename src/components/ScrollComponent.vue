@@ -17,7 +17,7 @@
             </v-row>
             <v-row>
               <v-col>
-                <v-switch v-model="overflowAnchor" label="Scroll Anchor"> </v-switch>
+                <v-switch v-model="overflowAnchor" label="Scroll Anchor"></v-switch>
               </v-col>
             </v-row>
 
@@ -46,24 +46,24 @@
           <v-col>
             <v-row>
               <v-col>
-                <v-switch v-model="addImages" @change="initialize" label="Insert Images">
-                </v-switch>
+                <v-switch v-model="addImages" @change="initialize" label="Insert Images"></v-switch>
               </v-col>
             </v-row>
             <v-row v-if="addImages">
               <v-col>
-                <v-switch v-model="insertImageSkeleton" @change="initialize" label="Skeleton">
+                <v-switch v-model="insertImageSkeleton"
+                   @change="initialize" label="Skeleton">
                 </v-switch>
               </v-col>
               <v-col>
-                <v-switch v-model="randomSize" @change="initialize" label="Random Size"> </v-switch>
+                <v-switch v-model="randomSize" @change="initialize" label="Random Size"></v-switch>
               </v-col>
             </v-row>
             <v-row v-if="!addImages || insertImageSkeleton">
               <v-col>
-                <v-btn @click="addImagesAfter">
-                  {{ !insertImageSkeleton ? "Add Images After" : "Set Images Src" }}
-                </v-btn>
+                <v-btn
+                  @click="addImagesAfter"
+                >{{ !insertImageSkeleton ? "Add Images After" : "Set Images Src" }}</v-btn>
               </v-col>
             </v-row>
           </v-col>
@@ -78,7 +78,7 @@
         class="scrollArea"
         :style="overflowAnchor ? 'overflow-anchor:auto' : 'overflow-anchor:none'"
       ></div>
-      <v-alert> Scroll Event: {{ lastScrollEvent }} </v-alert>
+      <v-alert>Scroll Event: {{ lastScrollEvent }}</v-alert>
     </v-card>
   </v-container>
 </template>
@@ -194,7 +194,9 @@ export default {
         message.setAttribute('data-index', i);
         this.messageList.push(message);
         console.log(
-          `SelectedNode: ${this.selectedNode} i: ${i} compare :${Number(this.selectedNode) + 5}`,
+          `SelectedNode: ${this.selectedNode} i: ${i} compare :${Number(
+            this.selectedNode,
+          ) + 5}`,
         );
         if (this.selectedNode !== 0 && i === Number(this.selectedNode) + 10) {
           this.selectNode(this.selectedNode);
@@ -283,7 +285,9 @@ export default {
       }
     },
     selectNode(num) {
-      console.log(`Trying to select Node: ${num} of ${this.messageList.length}`);
+      console.log(
+        `Trying to select Node: ${num} of ${this.messageList.length}`,
+      );
       if (num < this.messageList.length) {
         const top = this.messageList[num].offsetTop;
         console.log(this.$refs.scrollArea.offsetHeight);

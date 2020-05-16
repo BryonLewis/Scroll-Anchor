@@ -15,57 +15,54 @@
                 ></v-select>
               </v-col>
             </v-row>
-                        <v-row>
+            <v-row>
               <v-col>
                 <v-switch v-model="overflowAnchor" label="Scroll Anchor"> </v-switch>
               </v-col>
             </v-row>
 
-            <v-row v-if="(selectedMode !== 'Single Page')" >
-              <v-col v-if="(selectedMode === 'Static List')">
-              <v-text-field
-                  v-model="numNodes"
-                  type="number"
-                  label="List Size"
-                  hide-details
-                />
-                    </v-col>
-                    <v-col>
-                                    <v-text-field
+            <v-row v-if="selectedMode !== 'Single Page'">
+              <v-col v-if="selectedMode === 'Static List'">
+                <v-text-field v-model="numNodes" type="number" label="List Size" hide-details />
+              </v-col>
+              <v-col v-if="selectedMode === 'Continuous List'">
+                <v-text-field
                   v-model="selectedNode"
                   type="number"
                   label="Selected Node"
                   hide-details
                 />
-
-                    </v-col>
+              </v-col>
+              <v-col>
+                <v-text-field
+                  v-model="selectedNodeOffset"
+                  type="number"
+                  label="Offset"
+                  hide-details
+                />
+              </v-col>
             </v-row>
           </v-col>
           <v-col>
             <v-row>
               <v-col>
-                <v-switch v-model="addImages"
-                 @change="initialize"
-                 label="Insert Images"> </v-switch>
+                <v-switch v-model="addImages" @change="initialize" label="Insert Images">
+                </v-switch>
               </v-col>
             </v-row>
-                          <v-row v-if="addImages">
+            <v-row v-if="addImages">
               <v-col>
-                <v-switch v-model="insertImageSkeleton"
-                 @change="initialize"
-                 label="Skeleton"> </v-switch>
+                <v-switch v-model="insertImageSkeleton" @change="initialize" label="Skeleton">
+                </v-switch>
               </v-col>
               <v-col>
-                <v-switch v-model="randomSize"
-                 @change="initialize"
-                 label="Random Size"> </v-switch>
+                <v-switch v-model="randomSize" @change="initialize" label="Random Size"> </v-switch>
               </v-col>
-
             </v-row>
             <v-row v-if="!addImages || insertImageSkeleton">
               <v-col>
                 <v-btn @click="addImagesAfter">
-                  {{ !insertImageSkeleton ? 'Add Images After' : 'Set Images Src'}}
+                  {{ !insertImageSkeleton ? "Add Images After" : "Set Images Src" }}
                 </v-btn>
               </v-col>
             </v-row>
@@ -96,6 +93,7 @@ export default {
       overflowAnchor: true,
       modes: ['Single Page', 'Continuous List', 'Static List'],
       selectedMode: 'Single Page',
+      selectedNodeOffset: 5,
       addImages: true,
       insertImageSkeleton: false,
       randomSize: false,
@@ -195,7 +193,9 @@ export default {
         const message = this.addMessage(ref, lorem);
         message.setAttribute('data-index', i);
         this.messageList.push(message);
-        console.log(`SelectedNode: ${this.selectedNode} i: ${i} compare :${Number(this.selectedNode) + 5}`);
+        console.log(
+          `SelectedNode: ${this.selectedNode} i: ${i} compare :${Number(this.selectedNode) + 5}`,
+        );
         if (this.selectedNode !== 0 && i === Number(this.selectedNode) + 10) {
           this.selectNode(this.selectedNode);
         }
@@ -210,7 +210,10 @@ export default {
           message.setAttribute('data-index', this.messageList.length - 1);
           this.messageList.push(message);
           const i = this.messageList.length - 1;
-          if (this.selectedNode !== 0 && i === Number(this.selectedNode) + 5) {
+          if (
+            this.selectedNode !== 0
+            && i === Number(this.selectedNode) + Number(this.selectedNodeOffset)
+          ) {
             this.selectNode(this.selectedNode);
           }
         }, 1000);

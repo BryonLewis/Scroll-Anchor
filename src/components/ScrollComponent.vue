@@ -25,7 +25,7 @@
               <v-col v-if="selectedMode === 'Static List'">
                 <v-text-field v-model="numNodes" type="number" label="List Size" hide-details />
               </v-col>
-              <v-col v-if="selectedMode === 'Continuous List'">
+              <v-col v-if="selectedMode !== 'Single Page'">
                 <v-text-field
                   v-model="selectedNode"
                   type="number"
@@ -33,7 +33,7 @@
                   hide-details
                 />
               </v-col>
-              <v-col>
+              <v-col v-if="selectedMode === 'Continuous List'">
                 <v-text-field
                   v-model="selectedNodeOffset"
                   type="number"
@@ -46,29 +46,68 @@
           <v-col>
             <v-row>
               <v-col>
-                <v-switch v-model="addImages" @change="initialize" label="Insert Images"></v-switch>
-              </v-col>
+                <v-switch
+                   v-model="ImageConfig.addImages"
+                   @change="initialize"
+                   label="Insert Images">
+                   </v-switch>
+                   </v-col>
             </v-row>
-            <v-row v-if="addImages">
+            <v-row v-if="ImageConfig.addImages">
               <v-col>
-                <v-switch v-model="insertImageSkeleton"
+                <v-switch v-model="ImageConfig.insertImageSkeleton"
                    @change="initialize" label="Skeleton">
                 </v-switch>
               </v-col>
               <v-col>
-                <v-switch v-model="randomSize" @change="initialize" label="Random Size"></v-switch>
+                <v-switch
+                  v-model="ImageConfig.randomSize"
+                  @change="initialize"
+                  label="Random Size">
+                </v-switch>
               </v-col>
             </v-row>
-            <v-row v-if="!addImages || insertImageSkeleton">
+            <v-row v-if="!ImageConfig.addImages || ImageConfig.insertImageSkeleton">
               <v-col>
                 <v-btn
                   @click="addImagesAfter"
-                >{{ !insertImageSkeleton ? "Add Images After" : "Set Images Src" }}</v-btn>
+                >{{
+                  !ImageConfig.insertImageSkeleton ? "Add Images After" : "Set Images Src" }}
+                </v-btn>
               </v-col>
             </v-row>
           </v-col>
           <v-col>
+            <v-row>
+              <v-col>
             <v-btn @click="initialize">Reload</v-btn>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-switch
+                  v-model="attachMutationObserver"
+                  @change="initialize"
+                  label="Mutation Observer">
+                </v-switch>
+              </v-col>
+              <v-col v-if="attachMutationObserver && overflowAnchor">
+                <v-switch
+                  v-model="filterScrolls"
+                  @change="initialize"
+                  label="Filter Scrolls">
+                </v-switch>
+              </v-col>
+            </v-row>
+              <v-row>
+                <v-col>
+                  Scroll Count: {{scrollCount}}
+                </v-col>
+                <v-col v-if="filterScrolls">
+                  Filter Count: {{filterCount}}
+                </v-col>
+            </v-row>
+
           </v-col>
         </v-row>
         <v-divider></v-divider>
@@ -76,9 +115,9 @@
       <div
         ref="scrollArea"
         class="scrollArea"
+        id="scrollArea"
         :style="overflowAnchor ? 'overflow-anchor:auto' : 'overflow-anchor:none'"
       ></div>
-      <v-alert>Scroll Event: {{ lastScrollEvent }}</v-alert>
     </v-card>
   </v-container>
 </template>
@@ -94,9 +133,14 @@ export default {
       modes: ['Single Page', 'Continuous List', 'Static List'],
       selectedMode: 'Single Page',
       selectedNodeOffset: 5,
-      addImages: true,
-      insertImageSkeleton: false,
-      randomSize: false,
+      ImageConfig: {
+        addImages: true,
+        insertImageSkeleton: false,
+        randomSize: false,
+      },
+      itemsLoaded: false,
+      attachMutationObserver: false,
+      filterScrolls: false,
       lastScrollEvent: '',
       imageLoaded: false,
       interval: null,
@@ -105,15 +149,12 @@ export default {
       imageList: [],
       numNodes: 0,
       selectedNode: 0,
+      scrollCount: 0,
+      filterCount: 0,
     };
   },
   mounted() {
     this.initialize();
-    this.$refs.scrollArea.addEventListener('scroll', (e) => {
-      if (this.imageLoaded) {
-        this.lastScrollEvent = e.toString();
-      }
-    });
   },
   methods: {
     initialize() {
@@ -124,6 +165,15 @@ export default {
       this.imageLoaded = false;
       this.$refs.scrollArea.innerHTML = '';
       this.$refs.scrollArea.scrollTop = 0;
+      this.scrollCount = 0;
+      this.filterCount = 0;
+      if (this.observer) {
+        this.observer.disconnect();
+        this.observer = null;
+      }
+      if (this.attachMutationObserver) {
+        this.mutationObserver();
+      }
       if (this.selectedMode === 'Static List' && this.numNodes === 0) {
         this.numNodes = 10;
       }
@@ -135,19 +185,20 @@ export default {
           // this.selectNode(this.selectedNode);
         }
       }
+      this.itemsLoaded = true;
     },
     singlePage(ref) {
       // Add in a large image
       const centerDiv = document.createElement('div');
       centerDiv.className = 'centerDiv';
-      if (this.addImages) {
+      if (this.ImageConfig.addImages) {
         const img = document.createElement('img');
         const imgsize = Math.floor(600 + Math.random() * 300);
         img.onload = () => {
           this.imageLoaded = true;
         };
         this.imageList.push(img);
-        if (!this.insertImageSkeleton) {
+        if (!this.ImageConfig.insertImageSkeleton) {
           img.src = `https://picsum.photos/${imgsize}`;
         } else {
           img.src = '';
@@ -193,11 +244,6 @@ export default {
         const message = this.addMessage(ref, lorem);
         message.setAttribute('data-index', i);
         this.messageList.push(message);
-        console.log(
-          `SelectedNode: ${this.selectedNode} i: ${i} compare :${Number(
-            this.selectedNode,
-          ) + 5}`,
-        );
         if (this.selectedNode !== 0 && i === Number(this.selectedNode) + 10) {
           this.selectNode(this.selectedNode);
         }
@@ -231,9 +277,9 @@ export default {
         }
         div.className += ' selected';
       });
-      if (this.addImages) {
+      if (this.ImageConfig.addImages) {
         let size = 100;
-        if (this.randomSize) {
+        if (this.ImageConfig.randomSize) {
           size = Math.floor(25 + Math.random() * 75);
         }
         this.imageList.push(this.addImage(div, size));
@@ -246,7 +292,7 @@ export default {
       img.onload = () => {
         this.imageLoaded = true;
       };
-      if (!this.insertImageSkeleton) {
+      if (!this.ImageConfig.insertImageSkeleton) {
         img.src = `https://picsum.photos/${size}?random=${this.imageList.length}`;
       } else {
         img.src = '';
@@ -256,7 +302,7 @@ export default {
     },
     addImagesAfter() {
       if (this.selectedMode === 'Single Page') {
-        if (!this.insertImageSkeleton) {
+        if (!this.ImageConfig.insertImageSkeleton) {
           this.imageList.push(this.addImage(this.$refs.scrollArea, 700));
         } else {
           this.imageList[0].src = 'https://picsum.photos/700?random=1';
@@ -265,10 +311,10 @@ export default {
         if (this.selectedMode === 'Continuous List') {
           clearInterval(this.interval);
         }
-        if (!this.insertImageSkeleton) {
+        if (!this.ImageConfig.insertImageSkeleton) {
           for (let i = 0; i < this.messageList.length; i += 1) {
             let size = 100;
-            if (this.randomSize) {
+            if (this.ImageConfig.randomSize) {
               size = Math.floor(25 + Math.random() * 75);
             }
             this.imageList.push(this.addImage(this.messageList[i], size));
@@ -276,26 +322,59 @@ export default {
         } else {
           for (let i = 0; i < this.imageList.length; i += 1) {
             let size = 100;
-            if (this.randomSize) {
+            if (this.ImageConfig.randomSize) {
               size = Math.floor(25 + Math.random() * 75);
             }
-            this.imageList[i].src = `https://picsum.photos/${size}`;
+            this.imageList[i].src = `https://picsum.photos/${size}?random=${i}`;
           }
         }
       }
     },
     selectNode(num) {
-      console.log(
-        `Trying to select Node: ${num} of ${this.messageList.length}`,
-      );
       if (num < this.messageList.length) {
         const top = this.messageList[num].offsetTop;
-        console.log(this.$refs.scrollArea.offsetHeight);
-        this.$refs.scrollArea.scrollTop = top - this.$refs.scrollArea.offsetHeight;
+        const newTop = top - this.$refs.scrollArea.offsetHeight;
+        if (top !== newTop) {
+          this.$refs.scrollArea.scrollTop = newTop;
+          this.scrollCount += 1;
+        }
         if (this.messageList[num].className.indexOf('selected') === -1) {
           this.messageList[num].className += ' selected';
         }
       }
+    },
+    mutationObserver() {
+      const { offsetTop } = this.$refs.scrollArea;
+      const self = this;
+      function onLoadImage() {
+        if (self.selectedNode !== 0) {
+          if (!self.filterScrolls) {
+            self.selectNode(self.selectedNode);
+          } else if (self.$refs.scrollArea.scrollTop < this.offsetTop
+          && this.offsetTop
+           < self.$refs.scrollArea.scrollTop + self.$refs.scrollArea.offsetHeight) {
+            console.log(`offsetTop: ${offsetTop} scollTop:${self.$refs.scrollArea.scrollTop} clientHeight: ${self.$refs.scrollArea.offsetHeight} imgEl: ${this.offsetTop}`);
+            self.selectNode(self.selectedNode);
+            self.filterCount += 1;
+          }
+        }
+      }
+      this.observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutations.addedNodes) {
+            return;
+          }
+          mutation.addedNodes.forEach((node) => {
+            const imgs = node.getElementsByTagName('img');
+            imgs.forEach((image) => {
+              // eslint-disable-next-line no-param-reassign
+              image.onload = onLoadImage;
+            });
+          });
+        });
+      });
+
+      this.observer.observe(this.$refs.scrollArea, { childList: true, subtree: true });
     },
   },
 };

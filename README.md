@@ -1,5 +1,6 @@
 # scrollanchor
 
+[Demo Link](https://bryonclewis.github.io/Scroll-Anchor/index.html)
 ## Project setup
 ```
 npm install

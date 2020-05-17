@@ -153,6 +153,19 @@ export default {
       filterCount: 0,
     };
   },
+  created() {
+    console.log(window.location.href);
+    const paramList = ['overflowAnchor', 'selectedMode', 'selectedNodeOffset', 'attachMutationObserver', 'filterScrolls', 'numNodes', 'filterCount'];
+    const params = new URLSearchParams(window.location.href.substring(window.location.href.indexOf('?'), window.location.href.length));
+    for (let i = 0; i < paramList.length; i += 1) {
+      const val = params.has(paramList[i]);
+      if (val) {
+        console.log(`${paramList[i]}:${this[paramList[i]]}`);
+        this[paramList[i]] = params.get(paramList[i]);
+        console.log(`${paramList[i]}:${this[paramList[i]]}`);
+      }
+    }
+  },
   mounted() {
     this.initialize();
   },
@@ -186,6 +199,18 @@ export default {
         }
       }
       this.itemsLoaded = true;
+    },
+    getParams(url) {
+      const params = {};
+      const parser = document.createElement('a');
+      parser.href = url;
+      const query = parser.search.substring(1);
+      const vars = query.split('&');
+      for (let i = 0; i < vars.length; i += 1) {
+        const pair = vars[i].split('=');
+        params[pair[0]] = decodeURIComponent(pair[1]);
+      }
+      return params;
     },
     singlePage(ref) {
       // Add in a large image

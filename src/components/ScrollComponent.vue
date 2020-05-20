@@ -101,11 +101,15 @@
             </v-row>
               <v-row>
                 <v-col>
+                  Event Count: {{scrollEventCount}}
+                </v-col>
+                <v-col>
                   Scroll Count: {{scrollCount}}
                 </v-col>
                 <v-col v-if="filterScrolls">
                   Filter Count: {{filterCount}}
                 </v-col>
+
             </v-row>
 
           </v-col>
@@ -132,7 +136,6 @@ export default {
       overflowAnchor: true,
       modes: ['Single Page', 'Continuous List', 'Static List'],
       selectedMode: 'Single Page',
-      selectedNodeOffset: 5,
       ImageConfig: {
         addImages: true,
         insertImageSkeleton: false,
@@ -149,25 +152,39 @@ export default {
       imageList: [],
       numNodes: 0,
       selectedNode: 0,
+      selectedNodeOffset: 5,
       scrollCount: 0,
       filterCount: 0,
+      scrollEventCount: 0,
     };
   },
   created() {
     console.log(window.location.href);
-    const paramList = ['overflowAnchor', 'selectedMode', 'selectedNodeOffset', 'attachMutationObserver', 'filterScrolls', 'numNodes', 'filterCount'];
+    const paramList = ['overflowAnchor', 'selectedMode', 'selectedNodeOffset', 'attachMutationObserver', 'filterScrolls', 'numNodes', 'selectedNode'];
     const params = new URLSearchParams(window.location.href.substring(window.location.href.indexOf('?'), window.location.href.length));
     for (let i = 0; i < paramList.length; i += 1) {
       const val = params.has(paramList[i]);
       if (val) {
-        console.log(`${paramList[i]}:${this[paramList[i]]}`);
         this[paramList[i]] = this.convertBasedonType(params.get(paramList[i]), this[paramList[i]]);
-        console.log(`${paramList[i]}:${this[paramList[i]]}`);
+      }
+    }
+    const imageParams = ['addImages', 'insertImageSkeleton', 'randomSize'];
+    for (let i = 0; i < imageParams.length; i += 1) {
+      const val = params.has(imageParams[i]);
+      if (val) {
+        this.ImageConfig[imageParams[i]] = this.convertBasedonType(params.get(imageParams[i]),
+          this.ImageConfig[imageParams[i]]);
       }
     }
   },
   mounted() {
     this.initialize();
+    if (!this.bound) {
+      this.$refs.scrollArea.addEventListener('scroll', () => {
+        this.scrollEventCount += 1;
+      });
+      this.bound = true;
+    }
   },
   methods: {
     initialize() {
@@ -180,6 +197,7 @@ export default {
       this.$refs.scrollArea.scrollTop = 0;
       this.scrollCount = 0;
       this.filterCount = 0;
+      this.scrollEventCount = 0;
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
@@ -199,6 +217,7 @@ export default {
         }
       }
       this.itemsLoaded = true;
+      this.scrollEventcount = 0;
     },
     convertBasedonType(item, source) {
       if (typeof (source) === 'boolean') {
@@ -210,7 +229,7 @@ export default {
       if (typeof (source) === 'number') {
         return Number(item);
       }
-      return null;
+      return item;
     },
     getParams(url) {
       const params = {};

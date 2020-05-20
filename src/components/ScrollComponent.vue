@@ -161,7 +161,7 @@ export default {
       const val = params.has(paramList[i]);
       if (val) {
         console.log(`${paramList[i]}:${this[paramList[i]]}`);
-        this[paramList[i]] = params.get(paramList[i]);
+        this[paramList[i]] = this.convertBasedonType(params.get(paramList[i]), this[paramList[i]]);
         console.log(`${paramList[i]}:${this[paramList[i]]}`);
       }
     }
@@ -199,6 +199,18 @@ export default {
         }
       }
       this.itemsLoaded = true;
+    },
+    convertBasedonType(item, source) {
+      if (typeof (source) === 'boolean') {
+        if (item.toLowerCase() !== 'false') {
+          return true;
+        }
+        return false;
+      }
+      if (typeof (source) === 'number') {
+        return Number(item);
+      }
+      return null;
     },
     getParams(url) {
       const params = {};
